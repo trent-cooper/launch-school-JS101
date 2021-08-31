@@ -1,3 +1,6 @@
+const JSON = require('./calculator_messages.json');
+const lang = 'en';
+
 const readline = require('readline-sync');
 
 let prompt = (message) => console.log(`=> ${message}`);
@@ -5,15 +8,15 @@ let prompt = (message) => console.log(`=> ${message}`);
 // Check if number valid
 let invalidNumber = (number) => number.trimStart() === '' || Number.isNaN(Number(number));
 
-prompt('Welcome to Calculator!');
+prompt(JSON[lang].welcome);
 
 // Ask user for first number
 function firstNumber() {
-  prompt("What's the first number?");
+  prompt(JSON[lang].first);
   let number1 = readline.question();
 
   while (invalidNumber(number1)) {
-    prompt("Hmm.. that doesn't look like a valid number..");
+    prompt(JSON[lang].invalid);
     number1 = readline.question();
   }
   return number1;
@@ -21,11 +24,11 @@ function firstNumber() {
 
 // Ask user for second number
 function secondNumber() {
-  prompt("What's the second number?");
+  prompt(JSON[lang].second);
   let number2 = readline.question();
 
   while (invalidNumber(number2)) {
-    prompt("Hmm.. that doesn't look like a valid number..");
+    prompt(JSON[lang].invalid);
     number2 = readline.question();
   }
   return number2;
@@ -33,11 +36,11 @@ function secondNumber() {
 
 // Ask user for operator
 function chooseOperator() {
-  prompt('What operation would you like to perform?\n1) Add 2) Subtract 3) Multiply 4) Divide');
+  prompt(JSON[lang].operator);
   let operator = readline.question();
 
   while (!['1', '2', '3', '4'].includes(operator)) {
-    prompt('Must choose 1, 2, 3 or 4');
+    prompt(JSON[lang].opCheck);
     operator = readline.question();
   }
   return operator;
@@ -62,12 +65,12 @@ function calculator(number1, number2, operator) {
 let proceed = 'y';
 
 do {
-  prompt(`The output is ${calculator(firstNumber(), secondNumber(), chooseOperator())}.`);
-  prompt('Would you like to perform another calculation?\n=> (Y/N)');
+  prompt(`${JSON[lang].output} ${calculator(firstNumber(), secondNumber(), chooseOperator())}.`);
+  prompt(JSON[lang].repeat);
   proceed = readline.question();
 
   while (!['y', 'n'].includes(proceed.toLowerCase())) {
-    prompt('Must select Y/N');
+    prompt(JSON[lang].repeatCheck);
     proceed = readline.question();
   }
 } while (proceed.toLowerCase() === 'y');
