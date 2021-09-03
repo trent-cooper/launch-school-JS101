@@ -40,8 +40,8 @@ let durationCheck = (duration) => duration <= 6 || isNaN(duration);
 
 prompt('What is the loan duration in years?');
 let loanDuration = ( readline.question() * 12 );
-// Make sure years entered as non integer are accounted for
 
+// Make sure years entered as non integer are accounted for
 while (durationCheck(loanDuration)) {
   prompt('Please enter a loan duration half a year or greater.');
   loanDuration = ( readline.question() * 12 );
