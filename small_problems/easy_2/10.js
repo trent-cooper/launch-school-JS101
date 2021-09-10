@@ -17,8 +17,6 @@ function stringToSignedInteger(string) {
   if (arrayTemp[0] === "+" || arrayTemp[0] === "-") {
     sign = arrayTemp.shift();
   }
-  console.log(typeof sign);
-  console.log(arrayTemp);
   let arrayOfDigits = arrayTemp.map(char => DIGITS[char]);
   let value = 0;
   arrayOfDigits.forEach(digit => (value = (10 * value) + digit));
