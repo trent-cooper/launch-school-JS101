@@ -17,6 +17,7 @@ for (let key in obj) {
     });
 
     arr.push(colorUpper);
+
   } else {
     arr.push(obj[key].size.toUpperCase());
   }
