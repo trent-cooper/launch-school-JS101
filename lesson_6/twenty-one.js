@@ -1,5 +1,3 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable indent */
 const readline = require('readline-sync');
 const STANDARD_DECK = [
   ['H', '2'], ['D', '2'], ['C', '2'], ['S', '2'],
@@ -16,6 +14,8 @@ const STANDARD_DECK = [
   ['H', 'K'], ['D', 'K'], ['C', 'K'], ['S', 'K'],
   ['H', 'A'], ['D', 'A'], ['C', 'A'], ['S', 'A'],
 ];
+const TOP_SCORE = 21;
+const DEALER_STAY = 17;
 
 function shuffle(array) {
   for (let idx = array.length - 1; idx > 0; idx--) {
@@ -35,29 +35,32 @@ function dealCard(deck, user) {
   user.push(deck.pop());
 }
 
-function displayHands(playerHand, dealerHand, showHidden = 0) {
+// eslint-disable-next-line max-len
+function displayHands(playerHand, dealerHand, playerTotal, dealerTotal, showHidden = 0) {
   console.clear();
   if (showHidden) {
-    console.log(`Dealer's Hand: (Total = ${sumHand(dealerHand)})`);
+    console.log(`Dealer's Hand: (Total = ${dealerTotal})`);
     displayCard(dealerHand);
   } else {
     console.log("Dealer's Hand: (Total = ??)");
     displayCard(dealerHand, 1);
   }
   console.log('');
-  console.log('----------------------------');
+  console.log('===============================');
   console.log('');
-  console.log(`Player's Hand: (Total = ${sumHand(playerHand)})`);
+  console.log(`Player's Hand: (Total = ${playerTotal})`);
   displayCard(playerHand);
   console.log('');
 }
 
+// eslint-disable-next-line max-lines-per-function
 function displayCard(hand, hideCard = 0) {
-  let cardLine = ['', '', '', '', '', '', ''];
+  let cardLine = ['', '', '', ''];
   let handCopy = hand.slice('');
   if (hideCard) {
     handCopy[0] = ['?', '?'];
   }
+  debugger;
 
   handCopy.forEach(card => {
     cardLine[0] += '  ---------  ';
@@ -79,11 +82,11 @@ function displayCard(hand, hideCard = 0) {
   console.log(cardLine[0]);
 }
 
-function checkHand(hand, user = 0) {
+function checkHand(total, user = 0) {
 
-  if (sumHand(hand) > 21) {
+  if (total > TOP_SCORE) {
     return 1;
-  } else if (user && sumHand(hand) >= 17) {
+  } else if (user && total >= DEALER_STAY) {
     return 2;
   } else {
     return false;
@@ -105,122 +108,140 @@ function sumHand(hand) {
   });
 
   values.filter(value => value === 'A').forEach(_ => {
-    if (sum > 21) sum -= 10;
+    if (sum > TOP_SCORE) sum -= 10;
   });
 
   return sum;
 }
 
-function displayWinner(playerHand, dealerHand) {
-  if (checkHand(playerHand) === 1) {
+function displayWinner(playerTotal, dealerTotal, score) {
+  if (checkHand(playerTotal) === 1) {
     console.log('You busted :( Dealer wins this hand.');
-  } else if (checkHand(dealerHand) === 1) {
+    score.dealer += 1;
+  } else if (checkHand(dealerTotal) === 1) {
     console.log('Dealer busted! You win this hand.');
-  } else if (sumHand(playerHand) > sumHand(dealerHand)) {
+    score.player += 1;
+  } else if ((playerTotal) > (dealerTotal)) {
     console.log('You win!');
-  } else if (sumHand(dealerHand) > sumHand(playerHand)) {
+    score.player += 1;
+  } else if ((dealerTotal) > (playerTotal)) {
     console.log('Dealer wins.');
+    score.dealer += 1;
   } else {
     console.log('It\'s a tie!');
   }
 }
 
-function playAgain() {
-  let answer = readline.question('Would you like to play another hand? (y/n): ').toLowerCase()[0];
-  return answer === 'y';
+function playAgain(score) {
+  console.log(`Current Score - Player: ${score.player} | Dealer: ${score.dealer}`);
+  let answer = readline.question('Would you like to play another hand? (Y/N): ').toLowerCase()[0];
+  while (true) {
+    if (['y', 'n'].includes(answer)) break;
+    answer = readline.question('Please enter Y/N: ').toLowerCase()[0];
+  }
+  return (answer === 'y');
 }
 
-//*Play Hand Loop*
-while (true) {
-  //Initialize Deck
-  let deck = STANDARD_DECK.slice();
-  shuffle(deck);
-
-  //Deal Hand
-  //Display Hands
-  let playerHand = [];
-  let dealerHand = [];
-  dealHands(deck, playerHand, dealerHand);
-  displayHands(playerHand, dealerHand);
-
-  //*Player Turn Loop*
-  while (true) {
-    //Check Hand Function (Checking for 21)
-          //If (21) break;
-    if (checkHand(playerHand)) break;
-
-    //Prompt: Stay or Hit
-    let answer;
-    while (true) {
-      console.log('(H)it or (S)tay?');
-      answer = readline.question().toLowerCase()[0];
-      if (['h', 's'].includes(answer)) break;
-      console.log('Must enter H/S to proceed');
-    }
-    //If: Hit
-      //Check Hand Function (Checking for 21/Bust)
-        //If 21/Bust break;
-    //Else If: Stay
-      //Break;
-    if (answer === 's' || checkHand(playerHand)) break;
-    dealCard(deck, playerHand);
-    displayHands(playerHand, dealerHand);
-    console.log(`You chose to hit - Your hand total is now ${sumHand(playerHand)}`);
-  }
-
-  //Store Player Hand Result
-  displayHands(playerHand, dealerHand);
-  if (checkHand(playerHand) === 1) {
-    displayWinner(playerHand, dealerHand);
-    if (playAgain()) {
-      continue;
-    } else {
-      break;
-    }
+function checkScore(score) {
+  if (score.player === 5) {
+    return 'Player';
+  } else if (score.dealer === 5) {
+    return 'Dealer';
   } else {
-    console.log('You chose to stay!');
-    console.log(`You're hand total is ${sumHand(playerHand)}`);
+    return null;
   }
+}
 
+while (true) {
+  let score = {
+    player: 0,
+    dealer: 0
+  };
 
-  readline.question('Press <Enter> to continue');
-
-
-  //*Dealer Turn Loop*
   while (true) {
-    //Display Full Dealer Hand
-    displayHands(playerHand, dealerHand, 1);
-    //Check Hand Function
-      //If (21) break;
-    //If (Total >= 17)
-      //Break;
-    if (checkHand(dealerHand, 1)) break;
-    //Else if (Total < 17)
-    //Deal Card
-    dealCard(deck, dealerHand);
-  }
-    //Check Dealer Hand Result
-  displayHands(playerHand, dealerHand, 1);
-  if (checkHand(dealerHand, 1) === 1) {
-    displayWinner(playerHand, dealerHand);
-    if (playAgain()) {
-      continue;
-    } else {
-      break;
+    let deck = STANDARD_DECK.slice();
+    shuffle(deck);
+
+    let playerHand = [];
+    let dealerHand = [];
+    dealHands(deck, playerHand, dealerHand);
+    let playerTotal = sumHand(playerHand);
+    let dealerTotal = sumHand(dealerHand);
+    displayHands(playerHand, dealerHand, playerTotal, dealerTotal);
+
+    while (true) {
+
+      let answer;
+
+      while (true) {
+        console.log('(H)it or (S)tay?');
+        answer = readline.question().toLowerCase()[0];
+        if (['h', 's'].includes(answer)) break;
+        console.log('Must enter H/S to proceed');
+      }
+
+      if (answer === 'h') {
+        dealCard(deck, playerHand);
+        playerTotal = sumHand(playerHand);
+        displayHands(playerHand, dealerHand, playerTotal, dealerTotal);
+        console.log(`You chose to hit - Your hand total is now ${playerTotal}`);
+      }
+
+      if (answer === 's' || checkHand(playerTotal)) break;
     }
-  } else if (checkHand(dealerHand, 1)) {
-    console.log('The dealer stayed @ above 17.');
-    console.log(`Dealer hand total is ${sumHand(dealerHand)}`);
+
+    displayHands(playerHand, dealerHand, playerTotal, dealerTotal);
+    if (checkHand(playerTotal) === 1) {
+      displayWinner(playerTotal, dealerTotal, score);
+      if (playAgain(score)) {
+        continue;
+      } else {
+        break;
+      }
+
+    } else {
+      console.log('You chose to stay!');
+      console.log(`You're hand total is ${playerTotal}`);
+    }
+
+    readline.question('Press <Enter> to continue');
+
+    while (true) {
+      displayHands(playerHand, dealerHand, playerTotal, dealerTotal, 1);
+      if (checkHand(dealerTotal, 1)) break;
+      dealCard(deck, dealerHand);
+      dealerTotal = sumHand(dealerHand);
+    }
+
+    displayHands(playerHand, dealerHand, playerTotal, dealerTotal, 1);
+    if (checkHand(dealerTotal, 1) === 1) {
+      displayWinner(playerTotal, dealerTotal, score);
+      if (playAgain(score)) {
+        continue;
+      } else {
+        break;
+      }
+
+    } else if (checkHand(dealerTotal, 1)) {
+      console.log(`The dealer stayed @ ${DEALER_STAY} or above.`);
+      console.log(`Dealer hand total is ${dealerTotal}`);
+    }
+
+    readline.question('Press <Enter> to continue');
+
+    displayHands(playerHand, dealerHand, playerTotal, dealerTotal, 1);
+    displayWinner(playerTotal, dealerTotal, score);
+
+    if (checkScore(score)) break;
+    if (!playAgain(score)) break;
   }
 
-  readline.question('Press <Enter> to continue');
-
-    //Compare Hand Results
-    //Display Winner
-  displayHands(playerHand, dealerHand, 1);
-  displayWinner(playerHand, dealerHand);
-
-    //Prompt 'another hand?'
-
-  if (!playAgain()) break;
+  let answer;
+  if (checkScore(score)) {
+    console.log(`Final Score - Player: ${score.player} | Dealer: ${score.dealer}`);
+    console.log(`${checkScore(score)} is the winner out of 5 hands!`);
+    console.log('Would you like to play another round of 5? (Y/N)');
+    answer = readline.question().toLowerCase()[0];
+  }
+  if (answer !== 'y') break;
 }
